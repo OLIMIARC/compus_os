@@ -1,6 +1,21 @@
 const IS_PROD = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
 const PRODUCTION_URL = 'https://campus-os-api.onrender.com/api/v1';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (IS_PROD ? PRODUCTION_URL : 'http://localhost:3000/api/v1');
+
+// Ensure the URL is absolute and starts with http/https
+function getBaseUrl() {
+    let url = process.env.NEXT_PUBLIC_API_URL;
+
+    // If empty or "campus-os-api" (common Render misconfiguration), use hardcoded fallback
+    if (!url || url === 'campus-os-api' || !url.startsWith('http')) {
+        if (IS_PROD) return PRODUCTION_URL;
+        return 'http://localhost:3000/api/v1';
+    }
+
+    return url;
+}
+
+const API_BASE_URL = getBaseUrl();
+console.log('📡 Resolved API Base URL:', API_BASE_URL);
 
 export class CampusOSAPI {
     private getHeaders(includeAuth = true): HeadersInit {
