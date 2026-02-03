@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const IS_PROD = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+const PRODUCTION_URL = 'https://campus-os-api.onrender.com/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (IS_PROD ? PRODUCTION_URL : 'http://localhost:3000/api/v1');
 
 export class CampusOSAPI {
     private getHeaders(includeAuth = true): HeadersInit {

@@ -77,11 +77,12 @@ app.use('/api/v1/moderation', moderationRoutes);
 
 // 404 handler
 app.use((req, res) => {
+    console.log(`⚠️ 404 - Not Found: ${req.method} ${req.url}`);
     res.status(404).json({
         ok: false,
         error: {
             code: 'NOT_FOUND',
-            message: 'Endpoint not found',
+            message: `Endpoint not found: ${req.method} ${req.url}`,
         },
     });
 });
