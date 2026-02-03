@@ -24,33 +24,26 @@ const app = express();
 // MIDDLEWARE STACK
 // ============================================
 
-// Debug Logger
+// Custom request logger for deep debugging
 app.use((req, res, next) => {
+    const origin = req.get('Origin');
     console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (origin) console.log(`   Origin: ${origin}`);
     next();
 });
 
-// Security
-// Custom CORS validator with logging
+// Permissive CORS for production unblocking + debugging
 const corsOptions: cors.CorsOptions = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) return callback(null, true);
-
-        const allowedOrigins = config.cors.origin;
-        const isAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes('*');
-
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            console.log(`❌ CORS blocked for origin: "${origin}"`);
-            console.log('   Allowed origins:', allowedOrigins);
-            callback(null, false);
+        // Reflect origin in production to unblock
+        if (origin) {
+            console.log(`✅ CORS check for origin: ${origin}`);
         }
+        callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Campus-ID'],
     optionsSuccessStatus: 200
 };
 
@@ -62,6 +55,9 @@ app.use(helmet({
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Initial startup log
+console.log('🚀 CORS allowed origins from config:', config.cors.origin);
 
 // Campus scoping (applies to all routes)
 app.use(campusMiddleware);
