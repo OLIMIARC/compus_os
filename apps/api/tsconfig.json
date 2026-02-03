@@ -29,6 +29,17 @@
                 "lib/*"
             ]
         },
+        "types": [
+            "node",
+            "express",
+            "jsonwebtoken",
+            "cors",
+            "bcrypt"
+        ],
+        "typeRoots": [
+            "./node_modules/@types",
+            "../../node_modules/@types"
+        ],
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true

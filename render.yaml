@@ -4,7 +4,7 @@ services:
     name: campus-os-api
     plan: free
     env: node
-    buildCommand: npm install && npx prisma generate --schema apps/api/src/prisma/schema.prisma && npm run build --workspace=@campus-os/api
+    buildCommand: npm install --include=dev && npx prisma generate --schema apps/api/src/prisma/schema.prisma && npm run build --workspace=@campus-os/api
     startCommand: npx prisma migrate deploy --schema apps/api/src/prisma/schema.prisma && npm run start --workspace=@campus-os/api
     envVars:
       - key: DATABASE_URL
@@ -28,7 +28,7 @@ services:
     name: campus-os-web
     plan: free
     env: node
-    buildCommand: npm install && npm run build --workspace=@campus-os/web
+    buildCommand: npm install --include=dev && npm run build --workspace=@campus-os/web
     startCommand: npm run start --workspace=@campus-os/web
     envVars:
       - key: NEXT_PUBLIC_API_URL
