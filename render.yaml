@@ -5,8 +5,8 @@ services:
     plan: free
     env: node
     rootDir: apps/api
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && npm run start
+    buildCommand: npm install && npx prisma generate --schema src/prisma/schema.prisma && npm run build
+    startCommand: npx prisma migrate deploy --schema src/prisma/schema.prisma && npm run start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
