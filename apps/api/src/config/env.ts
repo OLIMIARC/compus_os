@@ -48,6 +48,6 @@ export const config = {
         watermarkText: env.WATERMARK_TEXT,
     },
     cors: {
-        origin: env.CORS_ORIGIN.split(','),
+        origin: env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean),
     },
 };
