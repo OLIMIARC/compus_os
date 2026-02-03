@@ -1,0 +1,127 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--gray-50) 100%);
+    padding: var(--space-4);
+}
+
+.content {
+    width: 100%;
+    max-width: 420px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.logo {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-2);
+}
+
+.tagline {
+    color: var(--gray-600);
+    font-size: var(--text-base);
+}
+
+.card {
+    background: white;
+}
+
+.title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: var(--space-2);
+}
+
+.subtitle {
+    color: var(--gray-600);
+    margin-bottom: var(--space-6);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.error {
+    padding: var(--space-3);
+    background: #FEE2E2;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: var(--text-sm);
+}
+
+.footer {
+    margin-top: var(--space-6);
+    text-align: center;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--gray-200);
+}
+
+.footer p {
+    color: var(--gray-600);
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+.link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.demo {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--gray-300);
+}
+
+.demoTitle {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: var(--space-2);
+}
+
+.demoText {
+    font-size: var(--text-sm);
+    color: var(--gray-600);
+    margin: var(--space-1) 0;
+}
+
+.demoText code {
+    background: white;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    border: 1px solid var(--gray-200);
+}
+
+@media (max-width: 640px) {
+    .logo {
+        font-size: var(--text-3xl);
+    }
+
+    .title {
+        font-size: var(--text-xl);
+    }
+}

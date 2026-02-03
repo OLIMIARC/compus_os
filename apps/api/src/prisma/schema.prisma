@@ -1,0 +1,457 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
+model User {
+  id              String   @id @default(cuid())
+  fullName        String   @map("full_name")
+  email           String?  @unique
+  phone           String?  @unique
+  passwordHash    String   @map("password_hash")
+  username        String?  @unique
+  campusId        String   @map("campus_id")
+  roles           String   @default("student")
+  status          String   @default("active") // active, suspended, banned
+  reputationScore Int      @default(0) @map("reputation_score")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  campus              Campus              @relation(fields: [campusId], references: [id])
+  feedPosts           FeedPost[]
+  feedComments        FeedComment[]
+  feedReactions       FeedReaction[]
+  feedReposts         FeedRepost[]
+  pollVotes           PollVote[]
+  articles            Article[]
+  articleReads        ArticleRead[]
+  timetableEntries    TimetableEntry[]
+  reports             Report[]            @relation("Reporter")
+  moderationActions   ModerationAction[]
+  contentEmbedsCreated ContentEmbed[]
+  campusUpdates       CampusUpdate[]
+  
+  // Marketplace
+  marketplaceListings        MarketplaceListing[]   @relation("SellerListings")
+  sentMessages               MarketplaceMessage[]   @relation("SentMessages")
+  receivedMessages           MarketplaceMessage[]   @relation("ReceivedMessages")
+  marketplaceReviewsGiven    MarketplaceReview[]    @relation("MarketplaceReviewsGiven")
+  marketplaceReviewsReceived MarketplaceReview[]    @relation("MarketplaceReviewsReceived")
+
+  @@map("users")
+}
+
+model Campus {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users          User[]
+  courses        Course[]
+  feedPosts      FeedPost[]
+  articles       Article[]
+  campusUpdates  CampusUpdate[]
+  marketplaceListings MarketplaceListing[]
+  reports        Report[]
+
+  @@map("campuses")
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  campusId  String   @map("campus_id")
+  code      String
+  title     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  campus           Campus           @relation(fields: [campusId], references: [id])
+  timetableEntries TimetableEntry[]
+
+  @@unique([campusId, code])
+  @@map("courses")
+}
+
+// ============================================
+// CONTENT EMBED SYSTEM
+// ============================================
+
+model ContentEmbed {
+  id               String   @id @default(cuid())
+  sourceType       String   @map("source_type") // post, article, comment
+  sourceId         String   @map("source_id")
+  embeddedType     String   @map("embedded_type") // post, article, note, poll
+  embeddedId       String   @map("embedded_id")
+  embeddedCampusId String   @map("embedded_campus_id")
+  createdByUserId  String   @map("created_by_user_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  createdBy User @relation(fields: [createdByUserId], references: [id])
+
+  @@unique([sourceType, sourceId])
+  @@index([embeddedType, embeddedId])
+  @@index([createdByUserId])
+  @@map("content_embeds")
+}
+
+// ============================================
+// CAMPUS UPDATES (SYSTEM LAYER)
+// ============================================
+
+model CampusUpdate {
+  id             String    @id @default(cuid())
+  campusId       String    @map("campus_id")
+  creatorUserId  String    @map("creator_user_id")
+  title          String
+  body           String
+  type           String    // exam_schedule, registration, closure, emergency
+  status         String    @default("active") // active, expired
+  expiresAt      DateTime? @map("expires_at")
+  reactionsCount Int       @default(0) @map("reactions_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  campus  Campus @relation(fields: [campusId], references: [id])
+  creator User   @relation(fields: [creatorUserId], references: [id])
+
+  @@index([campusId, status])
+  @@map("campus_updates")
+}
+
+// ============================================
+// MARKETPLACE (Campus Trade)
+// ============================================
+
+model MarketplaceListing {
+  id          String   @id @default(cuid())
+  sellerId    String   @map("seller_id")
+  campusId    String   @map("campus_id")
+  
+  // Content
+  title       String
+  description String
+  category    String   // academics, electronics, dorm, services, personal, transport
+  subcategory String?  // textbooks, laptops, furniture, tutoring, etc
+  
+  // Type & Pricing
+  listingType String   @map("listing_type") // for_sale, for_rent, service, wanted, free
+  priceUgx    Int?     @map("price_ugx") // null for free/wanted
+  isNegotiable Boolean @default(false) @map("is_negotiable")
+  
+  // Product Details
+  condition   String?  // new, like_new, good, fair (null for services)
+  images      String   @default("[]") // JSON array of image URLs
+  meetsLocation String? @map("meets_location") // optional campus location
+  
+  // Status
+  status      String   @default("active") // active, sold, expired, removed
+  
+  // Metrics
+  viewsCount     Int @default(0) @map("views_count")
+  favoritesCount Int @default(0) @map("favorites_count")
+  
+  // Ratings (aggregated from MarketplaceReview)
+  ratingAvg   Float @default(0) @map("rating_avg")
+  ratingCount Int   @default(0) @map("rating_count")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  seller  User                    @relation("SellerListings", fields: [sellerId], references: [id])
+  campus  Campus                  @relation(fields: [campusId], references: [id])
+  reviews MarketplaceReview[]
+  messages MarketplaceMessage[]
+  
+  @@index([campusId])
+  @@index([category])
+  @@index([listingType])
+  @@index([status])
+  @@index([sellerId])
+  @@map("marketplace_listings")
+}
+
+model MarketplaceMessage {
+  id         String   @id @default(cuid())
+  listingId  String   @map("listing_id")
+  fromUserId String   @map("from_user_id")
+  toUserId   String   @map("to_user_id")
+  message    String
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  listing  MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  fromUser User               @relation("SentMessages", fields: [fromUserId], references: [id])
+  toUser   User               @relation("ReceivedMessages", fields: [toUserId], references: [id])
+  
+  @@index([listingId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@map("marketplace_messages")
+}
+
+model MarketplaceReview {
+  id           String   @id @default(cuid())
+  listingId    String   @map("listing_id")
+  reviewerId   String   @map("reviewer_id")
+  sellerId     String   @map("seller_id")
+  rating       Int      // 1-5
+  comment      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  listing  MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reviewer User               @relation("MarketplaceReviewsGiven", fields: [reviewerId], references: [id])
+  seller   User               @relation("MarketplaceReviewsReceived", fields: [sellerId], references: [id])
+  
+  @@unique([listingId, reviewerId])
+  @@index([sellerId])
+  @@map("marketplace_reviews")
+}
+
+
+// ============================================
+// FEED (SHORT-FORM + MEMES)
+// ============================================
+
+model FeedPost {
+  id                    String   @id @default(cuid())
+  campusId              String   @map("campus_id")
+  authorUserId          String   @map("author_user_id")
+  postType              String   @map("post_type") // text, image, poll, repost
+  title                 String?
+  body                  String
+  isAnonymous           Boolean  @default(false) @map("is_anonymous")
+  anonymousHandle       String?  @map("anonymous_handle")
+  status                String   @default("active") // active, hidden, removed
+  imagePath             String?  @map("image_path")
+  imageWatermarkedPath  String?  @map("image_watermarked_path")
+  likesCount            Int      @default(0) @map("likes_count")
+  commentsCount         Int      @default(0) @map("comments_count")
+  embedCount            Int      @default(0) @map("embed_count")
+  engagementScore       Float    @default(0) @map("engagement_score")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  campus    Campus         @relation(fields: [campusId], references: [id])
+  author    User           @relation(fields: [authorUserId], references: [id])
+  comments  FeedComment[]
+  reactions FeedReaction[]
+  reposts   FeedRepost[]   @relation("OriginalPost")
+  poll      Poll?
+
+  @@index([campusId, status, createdAt])
+  @@index([engagementScore])
+  @@map("feed_posts")
+}
+
+model FeedComment {
+  id              String   @id @default(cuid())
+  postId          String   @map("post_id")
+  authorUserId    String   @map("author_user_id")
+  body            String
+  isAnonymous     Boolean  @default(false) @map("is_anonymous")
+  anonymousHandle String?  @map("anonymous_handle")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  post   FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User     @relation(fields: [authorUserId], references: [id])
+
+  @@map("feed_comments")
+}
+
+model FeedReaction {
+  id           String   @id @default(cuid())
+  postId       String   @map("post_id")
+  userId       String   @map("user_id")
+  reactionType String   @map("reaction_type") // like
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("feed_reactions")
+}
+
+model FeedRepost {
+  id             String   @id @default(cuid())
+  originalPostId String   @map("original_post_id")
+  userId         String   @map("user_id")
+  campusId       String   @map("campus_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  originalPost FeedPost @relation("OriginalPost", fields: [originalPostId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([originalPostId])
+  @@map("feed_reposts")
+}
+
+model Poll {
+  id         String   @id @default(cuid())
+  postId     String   @unique @map("post_id")
+  question   String
+  embedCount Int      @default(0) @map("embed_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  post    FeedPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id         String   @id @default(cuid())
+  pollId     String   @map("poll_id")
+  optionText String   @map("option_text")
+  votesCount Int      @default(0) @map("votes_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String   @map("poll_id")
+  optionId  String   @map("option_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+  @@map("poll_votes")
+}
+
+// ============================================
+// ARTICLES (STUDENT-DRIVEN LONG-FORM)
+// ============================================
+
+model Article {
+  id               String    @id @default(cuid())
+  campusId         String    @map("campus_id")
+  authorUserId     String    @map("author_user_id")
+  title            String
+  summary          String?
+  bodyMarkdown     String    @map("body_markdown")
+  tier             String    @default("community") // community, featured
+  status           String    @default("draft") // draft, published, removed
+  viewsCount       Int       @default(0) @map("views_count")
+  completionRate   Float     @default(0) @map("completion_rate")
+  featuredAt       DateTime? @map("featured_at")
+  embedCount       Int       @default(0) @map("embed_count")
+  persistenceScore Float     @default(0) @map("persistence_score")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  publishedAt      DateTime? @map("published_at")
+
+  campus Campus        @relation(fields: [campusId], references: [id])
+  author User          @relation(fields: [authorUserId], references: [id])
+  reads  ArticleRead[]
+
+  @@index([campusId, status, tier])
+  @@index([persistenceScore])
+  @@map("articles")
+}
+
+model ArticleRead {
+  id             String   @id @default(cuid())
+  articleId      String   @map("article_id")
+  userId         String   @map("user_id")
+  readPercentage Int      @default(0) @map("read_percentage")
+  completed      Boolean  @default(false)
+  completedAt    DateTime? @map("completed_at")
+  readTimeSeconds Int     @default(0) @map("read_time_seconds")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([articleId, userId])
+  @@map("article_reads")
+}
+
+// ============================================
+// TIMETABLE (UTILITY LAYER)
+// ============================================
+
+model TimetableEntry {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  campusId  String   @map("campus_id")
+  courseId  String   @map("course_id")
+  dayOfWeek Int      @map("day_of_week") // 0-6 (Sunday-Saturday)
+  startTime String   @map("start_time") // HH:MM format
+  endTime   String   @map("end_time") // HH:MM format
+  location  String?
+  semester  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@index([userId, semester])
+  @@index([campusId])
+  @@map("timetable_entries")
+}
+
+// ============================================
+// MODERATION & SAFETY
+// ============================================
+
+model Report {
+  id             String   @id @default(cuid())
+  campusId       String   @map("campus_id")
+  reporterUserId String   @map("reporter_user_id")
+  targetType     String   @map("target_type") // post, comment, article, note, user
+  targetId       String   @map("target_id")
+  reason         String   // hate_speech, spam, harassment, etc
+  details        String?
+  status         String   @default("open") // open, reviewed, resolved
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  reporter User   @relation("Reporter", fields: [reporterUserId], references: [id])
+  campus   Campus @relation(fields: [campusId], references: [id])
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([campusId])
+  @@map("reports")
+}
+
+model ModerationAction {
+  id            String   @id @default(cuid())
+  moderatorUserId String @map("moderator_user_id")
+  reportId      String?  @map("report_id")
+  targetType    String   @map("target_type")
+  targetId      String   @map("target_id")
+  actionType    String   @map("action_type") // remove, warn, suspend, ban, shadowban
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  moderator User @relation(fields: [moderatorUserId], references: [id])
+
+  @@index([targetType, targetId])
+  @@map("moderation_actions")
+}
