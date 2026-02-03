@@ -49,6 +49,11 @@ app.get('/health', (req, res) => {
     res.json({ ok: true, message: 'Campus OS API is running' });
 });
 
+// Root path (Render health check default)
+app.get('/', (req, res) => {
+    res.json({ ok: true, message: 'Campus OS API is healthy' });
+});
+
 // API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1', coreRoutes); // Campuses & courses
