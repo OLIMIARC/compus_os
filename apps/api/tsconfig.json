@@ -3,7 +3,8 @@
         "target": "ES2022",
         "module": "commonjs",
         "lib": [
-            "ES2022"
+            "ES2022",
+            "DOM"
         ],
         "outDir": "./dist",
         "rootDir": "./src",
@@ -28,13 +29,6 @@
                 "lib/*"
             ]
         },
-        "types": [
-            "node"
-        ],
-        "typeRoots": [
-            "./node_modules/@types",
-            "../../node_modules/@types"
-        ],
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true
