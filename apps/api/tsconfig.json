@@ -28,9 +28,6 @@
                 "lib/*"
             ]
         },
-        "types": [
-            "node"
-        ],
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true
