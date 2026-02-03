@@ -9,74 +9,80 @@ async function main() {
 
     // Create Campuses
     const campuses = await Promise.all([
-        prisma.campus.create({
-            data: {
+        prisma.campus.upsert({
+            where: { id: 'cmp_makerere' },
+            update: {},
+            create: {
                 id: 'cmp_makerere',
                 name: 'Makerere University',
                 city: 'Kampala',
             },
         }),
-        prisma.campus.create({
-            data: {
+        prisma.campus.upsert({
+            where: { id: 'cmp_mubs' },
+            update: {},
+            create: {
                 id: 'cmp_mubs',
                 name: 'Makerere University Business School',
                 city: 'Kampala',
             },
         }),
-        prisma.campus.create({
-            data: {
+        prisma.campus.upsert({
+            where: { id: 'cmp_kyambogo' },
+            update: {},
+            create: {
                 id: 'cmp_kyambogo',
                 name: 'Kyambogo University',
                 city: 'Kampala',
             },
         }),
     ]);
-    console.log(`✅ Created ${campuses.length} campuses`);
+    console.log(`✅ Verified/Created ${campuses.length} campuses`);
 
     // Create Courses for Makerere
     const courses = await Promise.all([
-        prisma.course.create({
-            data: {
-                id: 'crs_' + nanoid(10),
+        prisma.course.upsert({
+            where: { campusId_code: { campusId: 'cmp_makerere', code: 'CSC2101' } },
+            update: {},
+            create: {
+                id: 'crs_datastruct',
                 campusId: 'cmp_makerere',
                 code: 'CSC2101',
                 title: 'Data Structures and Algorithms',
             },
         }),
-        prisma.course.create({
-            data: {
-                id: 'crs_' + nanoid(10),
+        prisma.course.upsert({
+            where: { campusId_code: { campusId: 'cmp_makerere', code: 'CSC2201' } },
+            update: {},
+            create: {
+                id: 'crs_db',
                 campusId: 'cmp_makerere',
                 code: 'CSC2201',
                 title: 'Database Systems',
             },
         }),
-        prisma.course.create({
-            data: {
-                id: 'crs_' + nanoid(10),
-                campusId: 'cmp_makerere',
-                code: 'CSC3101',
-                title: 'Software Engineering',
-            },
-        }),
-        prisma.course.create({
-            data: {
-                id: 'crs_' + nanoid(10),
+        prisma.course.upsert({
+            where: { campusId_code: { campusId: 'cmp_mubs', code: 'ACF1101' } },
+            update: {},
+            create: {
+                id: 'crs_accounting',
                 campusId: 'cmp_mubs',
                 code: 'ACF1101',
                 title: 'Financial Accounting',
             },
         }),
     ]);
-    console.log(`✅ Created ${courses.length} courses`);
+    console.log(`✅ Verified/Created ${courses.length} courses`);
 
     // Create Test Users
     const passwordHash = await bcrypt.hash('Password123', 10);
 
     const users = await Promise.all([
-        prisma.user.create({
-            data: {
-                id: 'usr_' + nanoid(10),
+        prisma.user.upsert({
+            where: { email: 'john@example.com' },
+            update: {},
+            create: {
+                id: 'usr_john',
                 fullName: 'John Doe',
                 email: 'john@example.com',
                 passwordHash,
@@ -87,9 +93,11 @@ async function main() {
                 reputationScore: 50,
             },
         }),
-        prisma.user.create({
-            data: {
-                id: 'usr_' + nanoid(10),
+        prisma.user.upsert({
+            where: { email: 'jane@example.com' },
+            update: {},
+            create: {
+                id: 'usr_jane',
                 fullName: 'Jane Smith',
                 email: 'jane@example.com',
                 passwordHash,
@@ -100,21 +108,8 @@ async function main() {
                 reputationScore: 150,
             },
         }),
-        prisma.user.create({
-            data: {
-                id: 'usr_' + nanoid(10),
-                fullName: 'Alice Johnson',
-                phone: '+256700123456',
-                passwordHash,
-                username: 'alicejohnson',
-                campusId: 'cmp_mubs',
-                roles: 'student',
-                status: 'active',
-                reputationScore: 25,
-            },
-        }),
     ]);
-    console.log(`✅ Created ${users.length} test users`);
+    console.log(`✅ Verified/Created ${users.length} test users`);
 
     // Create Sample Feed Post
     const post = await prisma.feedPost.create({
