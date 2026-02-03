@@ -31,12 +31,32 @@ app.use((req, res, next) => {
 });
 
 // Security
-app.use(helmet());
-app.use(cors({
-    origin: config.cors.origin,
+// Custom CORS validator with logging
+const corsOptions: cors.CorsOptions = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = config.cors.origin;
+        const isAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes('*');
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log(`❌ CORS blocked for origin: "${origin}"`);
+            console.log('   Allowed origins:', allowedOrigins);
+            callback(null, false);
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Body parsing
