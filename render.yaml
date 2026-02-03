@@ -18,6 +18,7 @@ services:
         value: production
       - key: CORS_ORIGIN
         fromService:
+          type: web
           name: campus-os-web
           property: host
       - key: JWT_SECRET
@@ -34,6 +35,7 @@ services:
     envVars:
       - key: NEXT_PUBLIC_API_URL
         fromService:
+          type: web
           name: campus-os-api
           property: host
       - key: NODE_ENV
