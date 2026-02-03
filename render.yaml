@@ -32,10 +32,7 @@ services:
     startCommand: npm run start --workspace=@campus-os/web
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: campus-os-api
-          property: host
+        value: https://campus-os-api.onrender.com/api/v1
       - key: NODE_ENV
         value: production
 
