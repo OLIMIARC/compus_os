@@ -63,9 +63,7 @@ export class CampusOSAPI {
             // Check if response is JSON
             if (!contentType || !contentType.includes('application/json')) {
                 const text = await response.text();
-                console.error('Non-JSON response from:', url);
-                console.error('Response body preview:', text.substring(0, 500));
-                throw new Error(`API returned non-JSON response (${response.status})`);
+                throw new Error(`API returned non-JSON response (${response.status}) at ${url}. Preview: ${text.substring(0, 100)}...`);
             }
 
             const data = await response.json();
