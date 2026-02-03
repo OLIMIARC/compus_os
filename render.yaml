@@ -16,10 +16,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
-        fromService:
-          type: web
-          name: campus-os-web
-          property: host
+        value: https://campus-os-web.onrender.com,http://localhost:3001
       - key: JWT_SECRET
         generateValue: true
 
