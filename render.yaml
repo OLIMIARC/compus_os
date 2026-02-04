@@ -5,7 +5,7 @@ services:
     plan: free
     env: node
     buildCommand: npm install --include=dev && npx prisma generate --schema apps/api/src/prisma/schema.prisma && npm run build --workspace=@campus-os/api
-    startCommand: npx prisma db push --schema apps/api/src/prisma/schema.prisma --accept-data-loss && npx prisma db seed --schema apps/api/src/prisma/schema.prisma && npm run start --workspace=@campus-os/api
+    startCommand: npx prisma db push --schema apps/api/src/prisma/schema.prisma --accept-data-loss && npm run start --workspace=@campus-os/api
     envVars:
       - key: DATABASE_URL
         fromDatabase:
