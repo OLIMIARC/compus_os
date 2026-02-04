@@ -44,10 +44,22 @@ const corsOptions: cors.CorsOptions = {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Campus-ID'],
-    optionsSuccessStatus: 200
+    exposedHeaders: ['Content-Length', 'Content-Type'],
+    optionsSuccessStatus: 200,
+    preflightContinue: false // Let CORS middleware handle OPTIONS completely
 };
 
 app.use(cors(corsOptions));
+
+// Explicit OPTIONS handler as failsafe
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Campus-ID');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200);
+});
+
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
