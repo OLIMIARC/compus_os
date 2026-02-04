@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import { config } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
@@ -21,48 +20,33 @@ import moderationRoutes from './modules/moderation/moderation.routes';
 const app = express();
 
 // ============================================
-// MIDDLEWARE STACK
+// CRITICAL: Handle OPTIONS (preflight) FIRST before any other middleware
 // ============================================
-
-// Custom request logger for deep debugging
 app.use((req, res, next) => {
-    const origin = req.get('Origin');
-    console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
-    if (origin) console.log(`   Origin: ${origin}`);
-    next();
-});
+    const origin = req.get('Origin') || '*';
 
-// Permissive CORS for production unblocking + debugging
-const corsOptions: cors.CorsOptions = {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        // Reflect origin in production to unblock
-        if (origin) {
-            console.log(`✅ CORS check for origin: ${origin}`);
-        }
-        callback(null, true);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Campus-ID'],
-    exposedHeaders: ['Content-Length', 'Content-Type'],
-    optionsSuccessStatus: 200,
-    preflightContinue: false // Let CORS middleware handle OPTIONS completely
-};
-
-app.use(cors(corsOptions));
-
-// Explicit OPTIONS handler as failsafe
-app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+    // Set CORS headers on EVERY request
+    res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Campus-ID');
     res.header('Access-Control-Allow-Credentials', 'true');
-    res.sendStatus(200);
+
+    // Handle OPTIONS immediately
+    if (req.method === 'OPTIONS') {
+        console.log(`✅ Preflight OPTIONS for ${req.url} from origin: ${origin}`);
+        return res.sendStatus(200);
+    }
+
+    next();
 });
 
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+// Custom request logger
+app.use((req, res, next) => {
+    console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
+app.use(helmet());
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
