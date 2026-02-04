@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
 import { config } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
