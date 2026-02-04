@@ -73,6 +73,87 @@ app.get('/', (req, res) => {
     res.json({ ok: true, message: 'Campus OS API is healthy' });
 });
 
+// TEMPORARY: One-time database seeding endpoint (remove after use)
+app.post('/seed-db', async (req, res) => {
+    try {
+        const { PrismaClient } = await import('@prisma/client');
+        const bcrypt = await import('bcrypt');
+        const { nanoid } = await import('nanoid');
+
+        const prisma = new PrismaClient();
+
+        console.log('🌱 Seeding database...');
+
+        // Create Campuses
+        const campuses = await Promise.all([
+            prisma.campus.upsert({
+                where: { id: 'cmp_makerere' },
+                update: {},
+                create: { id: 'cmp_makerere', name: 'Makerere University', city: 'Kampala' },
+            }),
+            prisma.campus.upsert({
+                where: { id: 'cmp_mubs' },
+                update: {},
+                create: { id: 'cmp_mubs', name: 'Makerere University Business School', city: 'Kampala' },
+            }),
+            prisma.campus.upsert({
+                where: { id: 'cmp_kyambogo' },
+                update: {},
+                create: { id: 'cmp_kyambogo', name: 'Kyambogo University', city: 'Kampala' },
+            }),
+        ]);
+
+        // Create Courses
+        await Promise.all([
+            prisma.course.upsert({
+                where: { campusId_code: { campusId: 'cmp_makerere', code: 'CSC2101' } },
+                update: {},
+                create: { id: 'crs_datastruct', campusId: 'cmp_makerere', code: 'CSC2101', title: 'Data Structures and Algorithms' },
+            }),
+            prisma.course.upsert({
+                where: { campusId_code: { campusId: 'cmp_makerere', code: 'CSC2201' } },
+                update: {},
+                create: { id: 'crs_db', campusId: 'cmp_makerere', code: 'CSC2201', title: 'Database Systems' },
+            }),
+            prisma.course.upsert({
+                where: { campusId_code: { campusId: 'cmp_mubs', code: 'ACF1101' } },
+                update: {},
+                create: { id: 'crs_accounting', campusId: 'cmp_mubs', code: 'ACF1101', title: 'Financial Accounting' },
+            }),
+        ]);
+
+        // Create Test Users
+        const passwordHash = await bcrypt.hash('Password123', 10);
+        await Promise.all([
+            prisma.user.upsert({
+                where: { email: 'john@example.com' },
+                update: {},
+                create: { id: 'usr_john', fullName: 'John Doe', email: 'john@example.com', passwordHash, username: 'johndoe', campusId: 'cmp_makerere', roles: 'student', status: 'active', reputationScore: 50 },
+            }),
+            prisma.user.upsert({
+                where: { email: 'jane@example.com' },
+                update: {},
+                create: { id: 'usr_jane', fullName: 'Jane Smith', email: 'jane@example.com', passwordHash, username: 'janesmith', campusId: 'cmp_makerere', roles: 'student,moderator', status: 'active', reputationScore: 150 },
+            }),
+        ]);
+
+        await prisma.$disconnect();
+
+        console.log('✅ Database seeded successfully!');
+        res.json({
+            ok: true,
+            message: 'Database seeded successfully',
+            data: {
+                campuses: campuses.length,
+                testAccount: { email: 'john@example.com', password: 'Password123' }
+            }
+        });
+    } catch (error: any) {
+        console.error('❌ Seeding error:', error);
+        res.status(500).json({ ok: false, error: { message: error.message } });
+    }
+});
+
 // API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1', coreRoutes); // Campuses & courses
