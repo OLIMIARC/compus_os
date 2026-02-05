@@ -63,17 +63,20 @@ export class ShopService {
                         status: { not: 'closed' }, // Only count active/suspended shops
                     },
                 },
-                reports: {
-                    where: {
-                        reportedUserId: userId,
-                    },
-                },
             },
         });
 
         if (!user) {
             throw new Error('User not found');
         }
+
+        // Count reports AGAINST this user (not reports BY this user)
+        const reportsAgainstUser = await prisma.report.count({
+            where: {
+                targetType: 'user',
+                targetId: userId,
+            },
+        });
 
         // Calculate account age in days
         const accountAgeDays = Math.floor(
@@ -98,8 +101,8 @@ export class ShopService {
                 required: ELIGIBILITY_GATES.COMPLETED_ACTIONS,
             },
             reports: {
-                met: user.reports.length < ELIGIBILITY_GATES.MAX_REPORTS,
-                current: user.reports.length,
+                met: reportsAgainstUser < ELIGIBILITY_GATES.MAX_REPORTS,
+                current: reportsAgainstUser,
                 max: ELIGIBILITY_GATES.MAX_REPORTS,
             },
             goodStanding: {
