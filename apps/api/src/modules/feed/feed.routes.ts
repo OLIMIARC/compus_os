@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { validate } from '../../middleware/validate.middleware';
 import { authMiddleware, optionalAuthMiddleware } from '../../middleware/auth.middleware';
 import { campusMiddleware, postRateLimit, commentRateLimit } from '../../middleware/campus.middleware';
-import { antiAbuseStack } from '../../middleware/antiSpam.middleware';
+import { antiSpamMiddleware } from '../../middleware/antiSpam.middleware';
 import {
     CreatePostSchema,
     CreateCommentSchema,
