@@ -10,7 +10,7 @@ class ShopController {
      */
     async getEligibility(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.userId!;
+            const userId = req.user!.id;
             const eligibility = await shopService.checkEligibility(userId);
 
             res.json({
@@ -28,8 +28,8 @@ class ShopController {
      */
     async createShop(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.userId!;
-            const campusId = req.campusId!;
+            const userId = req.user!.id;
+            const campusId = req.user!.campusId;
 
             const data = CreateShopSchema.parse(req.body);
 
@@ -79,7 +79,7 @@ class ShopController {
     async updateShop(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const userId = req.userId!;
+            const userId = req.user!.id;
 
             const updates = UpdateShopSchema.parse(req.body);
 
@@ -101,7 +101,7 @@ class ShopController {
     async suspendShop(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const moderatorId = req.userId!;
+            const moderatorId = req.user!.id;
             const { reason } = req.body;
 
             if (!reason) {
@@ -126,7 +126,7 @@ class ShopController {
     async restoreShop(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const moderatorId = req.userId!;
+            const moderatorId = req.user!.id;
 
             const shop = await shopService.restoreShop(id, moderatorId);
 
@@ -146,7 +146,7 @@ class ShopController {
     async closeShop(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const userId = req.userId!;
+            const userId = req.user!.id;
 
             const shop = await shopService.closeShop(id, userId);
 
