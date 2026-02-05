@@ -91,7 +91,8 @@ export function isLinkFarming(text: string): boolean {
     const textWithoutLinks = text.replace(/\/\w+\/[a-z0-9_]+/gi, '').trim();
 
     // If remaining text is very short, it's likely link farming
-    return textWithoutLinks.length < 40;
+    // Lowered to 10 chars for MVP (allows "Hello world" style posts)
+    return textWithoutLinks.length < 10;
 }
 
 /**
@@ -110,9 +111,9 @@ export function preventLinkFarming(
             error: {
                 code: 'INSUFFICIENT_ORIGINAL_TEXT',
                 message:
-                    'Your post must include at least 40 characters of original text besides any references.',
+                    'Your post must include at least 10 characters of original text besides any references.',
                 details: {
-                    minimum: 40,
+                    minimum: 10,
                     current: body.replace(/\/\w+\/[a-z0-9_]+/gi, '').trim().length,
                 },
             },
