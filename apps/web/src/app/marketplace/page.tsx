@@ -151,10 +151,10 @@ export default function MarketplacePage() {
 
                                 <div className={styles.footer}>
                                     <div className={styles.price}>
-                                        {listing.price_ugx ? formatPrice(listing.price_ugx) : 'FREE'}
+                                        {listing.priceUgx ? formatPrice(listing.priceUgx) : 'FREE'}
                                     </div>
                                     <div className={styles.typeBadge + ' ' + styles.badge}>
-                                        {listing.listing_type.replace('_', ' ')}
+                                        {listing.listingType?.replace('_', ' ') || 'for sale'}
                                     </div>
                                 </div>
                             </div>
