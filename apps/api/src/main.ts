@@ -1,11 +1,21 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { v4 as uuidv4 } from 'uuid';
 import { config } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
 import { ensureUploadDirectories } from './config/storage';
 import { errorMiddleware } from './middleware/error.middleware';
 import { campusMiddleware } from './middleware/campus.middleware';
+
+// Extend Express Request type to include requestId
+declare global {
+    namespace Express {
+        interface Request {
+            requestId: string;
+        }
+    }
+}
 
 // Import routes
 import authRoutes from './modules/auth/auth.routes';
@@ -21,29 +31,46 @@ import moderationRoutes from './modules/moderation/moderation.routes';
 const app = express();
 
 // ============================================
-// CRITICAL: Handle OPTIONS (preflight) FIRST before any other middleware
+// SECURITY & OBSERVABILITY MIDDLEWARE
 // ============================================
+
+// 1. Request ID Tracing (MUST be first)
 app.use((req, res, next) => {
-    const origin = req.get('Origin') || '*';
-
-    // Set CORS headers on EVERY request
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Campus-ID');
-    res.header('Access-Control-Allow-Credentials', 'true');
-
-    // Handle OPTIONS immediately
-    if (req.method === 'OPTIONS') {
-        console.log(`✅ Preflight OPTIONS for ${req.url} from origin: ${origin}`);
-        return res.sendStatus(200);
-    }
-
+    req.requestId = uuidv4();
+    res.setHeader('X-Request-Id', req.requestId);
     next();
 });
 
-// Custom request logger
+// 2. Strict CORS Policy
 app.use((req, res, next) => {
-    console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+    const origin = req.get('Origin');
+    const allowedOrigins = config.cors.origin;
+    
+    // Check if origin is allowed
+    const isAllowed = origin && allowedOrigins.includes(origin);
+
+    if (isAllowed) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Campus-ID,X-Admin-Secret');
+        res.header('Access-Control-Allow-Credentials', 'true');
+    }
+
+    // Handle OPTIONS (Preflight)
+    if (req.method === 'OPTIONS') {
+        if (isAllowed) {
+            return res.sendStatus(200);
+        }
+        // Block forbidden preflights
+        return res.sendStatus(403);
+    }
+    
+    next();
+});
+
+// 3. Structured Request Logger
+app.use((req, res, next) => {
+    console.log(`📡 [${req.requestId}] ${req.method} ${req.url}`);
     next();
 });
 
@@ -73,8 +100,16 @@ app.get('/', (req, res) => {
     res.json({ ok: true, message: 'Campus OS API is healthy' });
 });
 
-// TEMPORARY: One-time database seeding endpoint (remove after use)
+// PROTECTED: Database seeding endpoint
 app.post('/seed-db', async (req, res) => {
+    const adminSecret = req.get('X-Admin-Secret');
+    
+    // Strict security check
+    if (adminSecret !== config.jwt.secret) {
+        console.warn(`🛑 [${req.requestId}] Unauthorized seed attempt from IP: ${req.ip}`);
+        return res.status(403).json({ ok: false, error: 'Unauthorized' });
+    }
+
     try {
         const { PrismaClient } = await import('@prisma/client');
         const bcrypt = await import('bcrypt');
