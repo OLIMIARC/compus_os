@@ -370,6 +370,59 @@ export class CampusOSAPI {
         const query = campusId ? `?campus_id=${campusId}` : '';
         return this.request(`/updates/active${query}`, {}, false);
     }
+    // ============================================
+    // SHOPS (Earned Shops Feature)
+    // ============================================
+
+    async getShopEligibility(): Promise<{
+        ok: boolean;
+        data: {
+            eligible: boolean;
+            canCreate: boolean;
+            existingShopCount: number;
+            maxShops: number;
+            requirements: {
+                accountAge: { met: boolean; current: number; required: number };
+                reputation: { met: boolean; current: number; required: number };
+                completedActions: { met: boolean; current: number; required: number };
+                reports: { met: boolean; current: number; max: number };
+                goodStanding: { met: boolean; hasActiveBan: boolean };
+            };
+        };
+    }> {
+        return this.request('/shops/eligibility');
+    }
+
+    async createShop(data: {
+        name: string;
+        description: string;
+        category: string;
+    }): Promise<{ ok: boolean; data: any }> {
+        return this.request('/shops', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async getShop(shopId: string, campusId: string): Promise<{ ok: boolean; data: any }> {
+        return this.request(`/shops/${shopId}?campus_id=${campusId}`);
+    }
+
+    async updateShop(
+        shopId: string,
+        updates: { name?: string; description?: string; category?: string }
+    ): Promise<{ ok: boolean; data: any }> {
+        return this.request(`/shops/${shopId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(updates),
+        });
+    }
+
+    async closeShop(shopId: string): Promise<{ ok: boolean; data: any }> {
+        return this.request(`/shops/${shopId}/close`, {
+            method: 'POST',
+        });
+    }
 }
 
 export const api = new CampusOSAPI();
