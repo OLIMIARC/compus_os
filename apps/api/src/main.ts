@@ -160,6 +160,11 @@ app.post('/seed-db', async (req, res) => {
 
         // Create Test Users
         const passwordHash = await bcrypt.hash('Password123', 10);
+
+        // Calculate date 45 days ago for eligible user
+        const fortyFiveDaysAgo = new Date();
+        fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
         await Promise.all([
             prisma.user.upsert({
                 where: { email: 'john@example.com' },
@@ -170,6 +175,24 @@ app.post('/seed-db', async (req, res) => {
                 where: { email: 'jane@example.com' },
                 update: {},
                 create: { id: 'usr_jane', fullName: 'Jane Smith', email: 'jane@example.com', passwordHash, username: 'janesmith', campusId: 'cmp_makerere', roles: 'student,moderator', status: 'active', reputationScore: 150 },
+            }),
+            // Eligible user for shop creation testing
+            prisma.user.upsert({
+                where: { email: 'sarah@example.com' },
+                update: {},
+                create: {
+                    id: 'usr_sarah',
+                    fullName: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    passwordHash,
+                    username: 'sarahjohnson',
+                    campusId: 'cmp_makerere',
+                    roles: 'student',
+                    status: 'active',
+                    reputationScore: 350, // Meets 300+ requirement
+                    completedActions: 15, // Meets 10+ requirement
+                    createdAt: fortyFiveDaysAgo // Meets 30+ days requirement
+                },
             }),
         ]);
 
@@ -214,7 +237,11 @@ app.post('/seed-db', async (req, res) => {
             message: 'Database seeded successfully',
             data: {
                 campuses: campuses.length,
-                testAccount: { email: 'john@example.com', password: 'Password123' }
+                testAccounts: [
+                    { email: 'john@example.com', password: 'Password123', note: 'Regular user (50 rep, not eligible)' },
+                    { email: 'jane@example.com', password: 'Password123', note: 'Moderator (150 rep, not eligible)' },
+                    { email: 'sarah@example.com', password: 'Password123', note: 'Eligible for shop (350 rep, 15 actions, 45 days old)' }
+                ]
             }
         });
     } catch (error: any) {
