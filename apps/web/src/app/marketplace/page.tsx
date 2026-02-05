@@ -138,10 +138,27 @@ export default function MarketplacePage() {
             ) : (
                 <div className={styles.grid}>
                     {listings.map(listing => (
-                        <Card key={listing.id} hover onClick={() => { }}>
+                        <Card
+                            key={listing.id}
+                            hover
+                            onClick={() => router.push(`/marketplace/${listing.id}`)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             <div className={styles.listingCard}>
                                 <div className={styles.image}>
-                                    <LayoutGrid size={48} />
+                                    {listing.images?.[0] ? (
+                                        <img
+                                            src={listing.images[0]}
+                                            alt={listing.title}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                    ) : (
+                                        <LayoutGrid size={48} />
+                                    )}
                                 </div>
                                 <div className={styles.categoryBadge + ' ' + styles.badge}>
                                     {listing.category}
