@@ -200,7 +200,7 @@ app.post('/seed-db', async (req, res) => {
                 category: 'electronics',
                 condition: 'used_good',
                 status: 'active',
-                images: [],
+                images: '[]', // JSON string, not array
             }
         }).catch(() => console.log('⚠️ Listing already exists'));
 
