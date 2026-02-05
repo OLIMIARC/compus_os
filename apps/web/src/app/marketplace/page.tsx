@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
@@ -21,6 +22,7 @@ const CATEGORIES = [
 ];
 
 export default function MarketplacePage() {
+    const router = useRouter();
     const { user } = useAuth();
     const [listings, setListings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
