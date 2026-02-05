@@ -42,19 +42,11 @@ export default function CreateShopPage() {
 
     const fetchEligibility = async () => {
         try {
-            console.log('🔍 Fetching eligibility...');
             setLoading(true);
             const response = await api.getShopEligibility();
-            console.log('📦 RAW response:', response);
-            console.log('📦 Response keys:', Object.keys(response));
-            console.log('📦 Response.data:', response.data);
-            console.log('📦 Response type:', typeof response);
-            const { data: eligibilityData } = response;
-            console.log('📊 Destructured eligibilityData:', eligibilityData);
-            setEligibility(eligibilityData);
-            console.log('✅ Eligibility state set successfully');
+            // API client returns the data directly, not wrapped in {ok, data}
+            setEligibility(response as any);
         } catch (err: any) {
-            console.error('❌ Eligibility fetch error:', err);
             setError(err.message || 'Failed to check eligibility');
         } finally {
             setLoading(false);
