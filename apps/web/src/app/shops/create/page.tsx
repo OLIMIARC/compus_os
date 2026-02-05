@@ -81,6 +81,20 @@ export default function CreateShopPage() {
         );
     }
 
+    if (error) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.error}>
+                    <AlertCircle size={24} style={{ marginBottom: '1rem' }} />
+                    <p>{error}</p>
+                    <Button onClick={fetchEligibility} variant="secondary" style={{ marginTop: '1rem' }}>
+                        Try Again
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     if (!eligibility) {
         return (
             <div className={styles.container}>
