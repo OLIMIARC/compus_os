@@ -58,14 +58,18 @@ export default function CreateShopPage() {
         setError('');
 
         try {
-            await api.createShop({
+            const response = await api.createShop({
                 name: shopName,
                 description,
                 category,
             });
 
-            // Redirect to marketplace or shop management
-            router.push('/marketplace');
+            if (response.ok) {
+                // Redirect to the new shop page
+                router.push(`/shops/${response.data.id}`);
+            } else {
+                throw new Error(response.data?.message || 'Failed to create shop');
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to create shop');
         } finally {
