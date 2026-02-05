@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { formatPrice } from '@/lib/utils';
-import { Search, Plus, Filter, LayoutGrid, Package } from 'lucide-react';
+import { Search, Plus, Filter, LayoutGrid, Package, Store } from 'lucide-react';
 import Link from 'next/link';
 import styles from './marketplace.module.css';
 
@@ -67,12 +67,20 @@ export default function MarketplacePage() {
                         Buy, sell, or rent with students at your campus
                     </p>
                 </div>
-                <Link href="/marketplace/create">
-                    <Button>
-                        <Plus size={18} style={{ marginRight: '8px' }} />
-                        List Item
-                    </Button>
-                </Link>
+                <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+                    <Link href="/shops/create">
+                        <Button variant="secondary">
+                            <Store size={18} style={{ marginRight: '8px' }} />
+                            Create Shop
+                        </Button>
+                    </Link>
+                    <Link href="/marketplace/create">
+                        <Button>
+                            <Plus size={18} style={{ marginRight: '8px' }} />
+                            List Item
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className={styles.searchBar}>
