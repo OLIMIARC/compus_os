@@ -65,11 +65,11 @@ export default function CreateShopPage() {
                 category,
             });
 
-            if (response.ok) {
-                // Redirect to the new shop page
+            // API client returns {ok, data: {id, ...}}
+            if (response.ok && response.data?.id) {
                 router.push(`/shops/${response.data.id}`);
             } else {
-                throw new Error(response.data?.message || 'Failed to create shop');
+                throw new Error('Failed to create shop');
             }
         } catch (err: any) {
             setError(err.message || 'Failed to create shop');
