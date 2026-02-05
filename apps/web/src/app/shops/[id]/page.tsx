@@ -2,28 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
-import { ListingCard } from '@/components/marketplace/ListingCard'; // Assuming ListingCard is exported
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Store, User, Star, Calendar, MapPin, Tag, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Store, User, Star, Calendar, LayoutGrid, ShieldCheck } from 'lucide-react';
 import { getInitials, formatPrice } from '@/lib/utils';
 import styles from './shop-detail.module.css';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 
 export default function ShopDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
-    const { user } = useAuth(); // Use auth context
-    const router = useRouter(); // Use router
+    const { user } = useAuth();
+    const router = useRouter();
     const [shop, setShop] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // Only load shop if user is available (for campus_id) or if we decide to allow public access differently
-        // But api.getShop requires campusId.
-        // If user is not logged in, we might need a default campus or redirect.
-        // For now, assume user is logged in or we wait for user.
         if (user) {
             loadShop();
         }
@@ -32,7 +27,7 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
     async function loadShop() {
         try {
             setLoading(true);
-            const response = await api.getShop(id, user!.campus_id); // Use user's campus_id
+            const response = await api.getShop(id, user!.campus_id);
             setShop(response.data);
         } catch (err: any) {
             setError(err.message || 'Failed to load shop');
@@ -102,7 +97,41 @@ export default function ShopDetailPage({ params }: { params: { id: string } }) {
                     {shop.listings && shop.listings.length > 0 ? (
                         <div className={styles.listingsGrid}>
                             {shop.listings.map((listing: any) => (
-                                <ListingCard key={listing.id} listing={listing} />
+                                <Card
+                                    key={listing.id}
+                                    hover
+                                    onClick={() => router.push(`/marketplace/${listing.id}`)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <div className={styles.listingImage}>
+                                        {listing.images?.[0] ? (
+                                            <img
+                                                src={listing.images[0]}
+                                                alt={listing.title}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover'
+                                                }}
+                                            />
+                                        ) : (
+                                            <LayoutGrid size={48} />
+                                        )}
+                                    </div>
+                                    <div style={{ padding: '1rem' }}>
+                                        <div className={styles.listingCategory}>{listing.category}</div>
+                                        <h3 className={styles.listingTitle}>{listing.title}</h3>
+                                        <p className={styles.listingDescription}>{listing.description}</p>
+                                        <div className={styles.listingFooter}>
+                                            <div className={styles.listingPrice}>
+                                                {listing.priceUgx ? formatPrice(listing.priceUgx) : 'FREE'}
+                                            </div>
+                                            <div className={styles.listingType}>
+                                                {listing.listingType?.replace('_', ' ') || 'for sale'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
                             ))}
                         </div>
                     ) : (
