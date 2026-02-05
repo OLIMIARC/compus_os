@@ -40,7 +40,7 @@ router.post(
     authMiddleware,
     campusMiddleware,
     postRateLimit,
-    ...antiAbuseStack,
+    antiSpamMiddleware, // Only block external URLs, no length restriction
     validate(CreatePostSchema),
     feedController.createPostHandler
 );
@@ -59,7 +59,7 @@ router.post(
     '/:post_id/comments',
     authMiddleware,
     commentRateLimit,
-    ...antiAbuseStack,
+    antiSpamMiddleware, // Only block external URLs
     validate(CreateCommentSchema),
     feedController.createCommentHandler
 );
