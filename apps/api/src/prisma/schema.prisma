@@ -25,6 +25,7 @@ model User {
   roles           String   @default("student")
   status          String   @default("active") // active, suspended, banned
   reputationScore Int      @default(0) @map("reputation_score")
+  completedActions Int     @default(0) @map("completed_actions") // Track engagement for shop eligibility
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -48,6 +49,7 @@ model User {
   receivedMessages           MarketplaceMessage[]   @relation("ReceivedMessages")
   marketplaceReviewsGiven    MarketplaceReview[]    @relation("MarketplaceReviewsGiven")
   marketplaceReviewsReceived MarketplaceReview[]    @relation("MarketplaceReviewsReceived")
+  shops                      Shop[]                 // Earned shops owned by user
 
   @@map("users")
 }
@@ -66,6 +68,7 @@ model Campus {
   campusUpdates  CampusUpdate[]
   marketplaceListings MarketplaceListing[]
   reports        Report[]
+  shops          Shop[]
 
   @@map("campuses")
 }
@@ -139,6 +142,7 @@ model MarketplaceListing {
   id          String   @id @default(cuid())
   sellerId    String   @map("seller_id")
   campusId    String   @map("campus_id")
+  shopId      String?  @map("shop_id") // Optional: listing can belong to a shop
   
   // Content
   title       String
@@ -172,16 +176,54 @@ model MarketplaceListing {
   
   seller  User                    @relation("SellerListings", fields: [sellerId], references: [id])
   campus  Campus                  @relation(fields: [campusId], references: [id])
+  shop    Shop?                   @relation(fields: [shopId], references: [id])
   reviews MarketplaceReview[]
   messages MarketplaceMessage[]
   
   @@index([campusId])
   @@index([category])
   @@index([listingType])
+  @@index([shopId])
   @@index([status])
   @@index([sellerId])
   @@map("marketplace_listings")
 }
+
+// ============================================
+// EARNED SHOPS (Campus Trade - Privileged Status)
+// ============================================
+
+model Shop {
+  id                  String   @id @default(cuid())
+  campusId            String   @map("campus_id")
+  ownerUserId         String   @map("owner_user_id")
+  
+  // Shop Details
+  name                String
+  description         String
+  category            String   // services, electronics, academics, food, etc
+  
+  // Reputation Snapshot (owner's reputation at creation)
+  reputationSnapshot  Int      @map("reputation_snapshot")
+  
+  // Status (active, suspended, closed)
+  status              String   @default("active")
+  
+  // Timestamps
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  campus              Campus   @relation(fields: [campusId], references: [id])
+  owner               User     @relation(fields: [ownerUserId], references: [id])
+  listings            MarketplaceListing[]
+  
+  @@unique([campusId, name]) // Shop names must be unique per campus
+  @@index([campusId, status])
+  @@index([ownerUserId])
+  @@map("shops")
+}
+
 
 model MarketplaceMessage {
   id         String   @id @default(cuid())
