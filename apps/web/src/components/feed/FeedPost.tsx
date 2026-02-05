@@ -49,12 +49,12 @@ export function FeedPost({ post, onToggleLike }: FeedPostProps) {
                     onClick={() => onToggleLike(post.id)}
                 >
                     <Heart size={18} />
-                    <span>{post.likes_count || 0}</span>
+                    <span>{post.stats?.likes || 0}</span>
                 </button>
 
                 <button className={styles.actionBtn}>
                     <MessageCircle size={18} />
-                    <span>{post.comments_count || 0}</span>
+                    <span>{post.stats?.comments || 0}</span>
                 </button>
             </div>
         </Card>
