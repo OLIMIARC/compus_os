@@ -27,6 +27,7 @@ import articlesRoutes from './modules/articles/articles.routes';
 import timetableRoutes from './modules/timetable/timetable.routes';
 import reportsRoutes from './modules/reports/reports.routes';
 import moderationRoutes from './modules/moderation/moderation.routes';
+import shopRoutes from './modules/shop/shop.routes';
 
 const app = express();
 
@@ -242,6 +243,7 @@ app.use('/api/v1/articles', articlesRoutes);
 app.use('/api/v1/timetable', timetableRoutes);
 app.use('/api/v1/reports', reportsRoutes);
 app.use('/api/v1/moderation', moderationRoutes);
+app.use('/api/v1/shops', shopRoutes); // Earned shops (gated)
 
 // 404 handler
 app.use((req, res) => {
