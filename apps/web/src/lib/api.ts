@@ -95,6 +95,49 @@ export class CampusOSAPI {
         }
     }
 
+    // For endpoints that return { ok, data, meta } and we need the full response
+    private async requestFull<T>(
+        endpoint: string,
+        options: RequestInit = {},
+        includeAuth = true
+    ): Promise<T> {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const headers = this.getHeaders(includeAuth);
+
+        try {
+            console.log('API Request:', url, options.method || 'GET');
+
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...headers,
+                    ...options.headers,
+                },
+            });
+
+            console.log('API Response Status:', response.status);
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`API returned non-JSON response (${response.status}) at ${url}. Preview: ${text.substring(0, 100)}...`);
+            }
+
+            const data = await response.json();
+            console.log('Parsed JSON:', data);
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || `Request failed with status ${response.status}`);
+            }
+
+            return data as T; // Return full response, not just data.data
+        } catch (error: any) {
+            console.error('API Request Error:', error);
+            throw error;
+        }
+    }
+
     // ============================================
     // AUTH
     // ============================================
@@ -167,9 +210,9 @@ export class CampusOSAPI {
         campus_id?: string;
         page?: number;
         pageSize?: number;
-    }): Promise<{ data: any[]; meta: any }> {
+    }): Promise<{ ok: boolean; data: any[]; meta: any }> {
         const query = new URLSearchParams(params as any).toString();
-        return this.request(`/feed?${query}`, {}, false);
+        return this.requestFull(`/feed?${query}`, {}, false);
     }
 
     async getPost(postId: string): Promise<any> {
@@ -220,9 +263,9 @@ export class CampusOSAPI {
         search?: string;
         sort?: string;
         page?: number;
-    }): Promise<{ data: any[]; meta: any }> {
+    }): Promise<{ ok: boolean; data: any[]; meta: any }> {
         const query = new URLSearchParams(params as any).toString();
-        return this.request(`/marketplace?${query}`, {}, false);
+        return this.requestFull(`/marketplace?${query}`, {}, false);
     }
 
     async getListing(listingId: string, campusId: string): Promise<any> {
