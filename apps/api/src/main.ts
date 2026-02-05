@@ -195,9 +195,10 @@ app.post('/seed-db', async (req, res) => {
                 sellerId: 'usr_john',
                 title: 'HP Pavilion 15 - Good Condition',
                 description: 'Selling my laptop because I upgraded. Core i5, 8GB RAM, 256GB SSD.',
-                price: 850000,
-                currency: 'UGX',
                 category: 'electronics',
+                listingType: 'for_sale',
+                priceUgx: 850000,
+                isNegotiable: true,
                 condition: 'used_good',
                 status: 'active',
                 images: '[]', // JSON string, not array
