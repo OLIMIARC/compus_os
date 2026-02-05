@@ -47,6 +47,7 @@ export default function CreateShopPage() {
             const response = await api.getShopEligibility();
             console.log('📦 Full response:', response);
             console.log('📊 Response data:', response.data);
+            // API client already unwraps the response, use it directly
             setEligibility(response.data);
             console.log('✅ Eligibility state set to:', response.data);
         } catch (err: any) {
