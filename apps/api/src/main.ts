@@ -45,7 +45,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     const origin = req.get('Origin');
     const allowedOrigins = config.cors.origin;
-    
+
     // Check if origin is allowed
     const isAllowed = origin && allowedOrigins.includes(origin);
 
@@ -64,7 +64,7 @@ app.use((req, res, next) => {
         // Block forbidden preflights
         return res.sendStatus(403);
     }
-    
+
     next();
 });
 
@@ -103,7 +103,7 @@ app.get('/', (req, res) => {
 // PROTECTED: Database seeding endpoint
 app.post('/seed-db', async (req, res) => {
     const adminSecret = req.get('X-Admin-Secret');
-    
+
     // Strict security check
     if (adminSecret !== config.jwt.secret) {
         console.warn(`🛑 [${req.requestId}] Unauthorized seed attempt from IP: ${req.ip}`);
@@ -171,6 +171,38 @@ app.post('/seed-db', async (req, res) => {
                 create: { id: 'usr_jane', fullName: 'Jane Smith', email: 'jane@example.com', passwordHash, username: 'janesmith', campusId: 'cmp_makerere', roles: 'student,moderator', status: 'active', reputationScore: 150 },
             }),
         ]);
+
+        // Create Sample Feed Post
+        await prisma.feedPost.create({
+            data: {
+                id: 'fp_welcome',
+                campusId: 'cmp_makerere',
+                authorUserId: 'usr_john',
+                postType: 'social',
+                title: 'Welcome to Campus OS!',
+                body: 'This is the first post on the platform. Feel free to share your thoughts!',
+                status: 'active',
+                likesCount: 5,
+                commentsCount: 0,
+            }
+        }).catch(() => console.log('⚠️ Feed post already exists'));
+
+        // Create Sample Marketplace Listing
+        await prisma.marketplaceListing.create({
+            data: {
+                id: 'mkt_laptop',
+                campusId: 'cmp_makerere',
+                sellerId: 'usr_john',
+                title: 'HP Pavilion 15 - Good Condition',
+                description: 'Selling my laptop because I upgraded. Core i5, 8GB RAM, 256GB SSD.',
+                price: 850000,
+                currency: 'UGX',
+                category: 'electronics',
+                condition: 'used_good',
+                status: 'active',
+                images: [],
+            }
+        }).catch(() => console.log('⚠️ Listing already exists'));
 
         await prisma.$disconnect();
 
