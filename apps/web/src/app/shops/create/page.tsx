@@ -44,12 +44,10 @@ export default function CreateShopPage() {
         try {
             console.log('🔍 Fetching eligibility...');
             setLoading(true);
-            const response = await api.getShopEligibility();
-            console.log('📦 Full response:', response);
-            console.log('📊 Response data:', response.data);
-            // API client already unwraps the response, use it directly
-            setEligibility(response.data);
-            console.log('✅ Eligibility state set to:', response.data);
+            const { data: eligibilityData } = await api.getShopEligibility();
+            console.log('📦 Eligibility data:', eligibilityData);
+            setEligibility(eligibilityData);
+            console.log('✅ Eligibility state set successfully');
         } catch (err: any) {
             console.error('❌ Eligibility fetch error:', err);
             setError(err.message || 'Failed to check eligibility');
