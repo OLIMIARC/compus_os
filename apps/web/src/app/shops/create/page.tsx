@@ -42,10 +42,15 @@ export default function CreateShopPage() {
 
     const fetchEligibility = async () => {
         try {
+            console.log('🔍 Fetching eligibility...');
             setLoading(true);
             const response = await api.getShopEligibility();
+            console.log('📦 Full response:', response);
+            console.log('📊 Response data:', response.data);
             setEligibility(response.data);
+            console.log('✅ Eligibility state set to:', response.data);
         } catch (err: any) {
+            console.error('❌ Eligibility fetch error:', err);
             setError(err.message || 'Failed to check eligibility');
         } finally {
             setLoading(false);
@@ -100,9 +105,18 @@ export default function CreateShopPage() {
     }
 
     if (!eligibility) {
+        console.log('⚠️ Rendering fallback - eligibility is null/undefined');
+        console.log('   Error state:', error);
+        console.log('   Loading state:', loading);
         return (
             <div className={styles.container}>
-                <div className={styles.error}>Failed to load eligibility data</div>
+                <div className={styles.error}>
+                    Failed to load eligibility data
+                    <br />
+                    <small style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                        Debug: error={error || 'none'}, loading={loading ? 'true' : 'false'}, eligibility={eligibility === null ? 'null' : 'undefined'}
+                    </small>
+                </div>
             </div>
         );
     }
